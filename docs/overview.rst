@@ -149,30 +149,38 @@ example could be a service running on the client server and
 trying to get access to a resource on the same server. A typical
 flow diagram is the following:
 
-[TODO: diagram]
+.. image:: ../images/client-credentials.jpg
+
+1 Application authenticates itself using Client id/secret.
+2 Retrieves an access token.
+3 Uses the token to access the protected resource.
 
 If this case is the one that suits your needs then you should
 use the `Client Credentials grant`.
+
 
 Client is an application running on a web server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 In that case you should use the ``Authorization Code grant``. In
 this flow the Client requests an access token from the
 authorization server in order to access the protected
-resource. The Client gets an access token after first the
-resource owner is authorized.
+resource. The Client gets an access token, and optionally a refresh token,
+after first the resource owner is authorized.
 
-[TODO: diagram?]
+.. image:: ../images/authorization-code.jpg
 
-Client is trusted with user Credentials
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In that case probably you should use the ``Resource Owner
-Password Credentials Grant``. In this flow the end user trusts
-the ``Client`` with his/her credentials in order to be used by the
-client to authenticate him/her through the authorization server.
-This grant type is disabled by default in
-Invenio-OAuth2Server, and should only be used if there is no
-possibily to use another redirect-based flow.
+1 Application redirects the user agent to the /authorize url to    authenticate itself
+  through the authorization server.
+2 The end user the first time is provided with a consent page      that asks for specific
+  permissions to be granted to the application(e.g user email, list of contacts etc.)
+3 After the user confirms the access grant the authorization       server returns an
+  authorization code to the application.
+4 With the possession of the authorization code, the application   asks from the
+  authorization server an access token in exchange for its code.
+5 The authorization server validates the code sent from the        application and if is valid
+  issues an access token back to it. Optionally can return also a refresh token that is used by the application when the access_token is expired.
+6 The application uses the retrieved access token to eventually    consume the protected
+  resources stored in the resource server.
 
 
 Client is a Single Page Application
@@ -186,22 +194,24 @@ token. However, there is a security risk as the access token is exposed to
 the `user agent`(e.g user's browser). Also you should consider that the
 `Implicit grant` doesn't return refresh tokens.
 
-Invenio implementation of flows
--------------------------------
-Let's have a look on how Invenio-OAuth2Server implements this flows.
+.. image:: ../images/implicit-grant.jpg
 
-- Authorization Code Grant -> examples in oauthclient, graph with endpoint
-  interaction /authorize
+1 Application redirects the user agent to the /authorize url to           authenticate itself
+  through the authorization server.
+2 The end user the first time is provided with a consent page that asks   for specific
+  permissions to be granted to the application(e.g user email, list of contacts etc.)
+3 After the user confirms the access grant the authorization server       returns an
+  access token to the application. Note that in this flow no refresh token is issued and the access_token is short lived.
+4 The application uses the retrieved access token to eventually consume   the protected
+  resources stored in the resource server.
 
 
-.. code-block:: console
-
-    $ http://<OAuth2Server>/oauth/authorize?response_type=code&
-                                                client_id=j9TeGI9QpIzJeWdhewqUmx2UUHkvcSdGBnLtkICT&
-                                                redirect_uri=http://<OAuth2Client>/authorized&
-                                                scope=test:scope&
-                                                state=oubyFlr1aOO71SEOtfEeuCntdNOtKB
-
-- Client credentials grant /token endpoint
-- Implicit grant:  /authorize
-- Refreshing an access token
+Client is trusted with user Credentials
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In that case probably you should use the ``Resource Owner
+Password Credentials Grant``. In this flow the end user trusts
+the ``Client`` with his/her credentials in order to be used by the
+client to authenticate him/her through the authorization server.
+This grant type is disabled by default in
+Invenio-OAuth2Server, and should only be used if there is no
+possibily to use another redirect-based flow.
