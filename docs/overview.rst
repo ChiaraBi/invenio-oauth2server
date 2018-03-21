@@ -2,31 +2,42 @@ Overview
 ========
 Understanding API Authentication in Invenio
 -------------------------------------------
-There are 2 ways to authenticate users in an Invenio application:
+A user can make authenticated requests against the Invenio REST APIs using two
+different methods:
 
-1. One way is to use a session based or
-   `JSON Web Token <https://jwt.io/introduction/>`_
-   authentication provided by
-   `Invenio-Accounts <https://invenio-accounts.readthedocs.io/en/latest/>`_.
+**Session**
+A user who logged into an Invenio application in the browser obtains a session.
+The session is implemented via Secure HTTP-only cookies, to ensure that the
+cookie containing the session identifier is only submitted over HTTPS, and that
+JavaScript applications running in the browser cannot access the cookie. When
+the session cookie is provided in an HTTP request to the API, the cookie is
+ used to authenticate the user.
 
-   The traditional Session authentication functionality is mainly
-   powered by `Flask-Login <https://flask-login.readthedocs.io/en/latest/>`_
-   and passes the user id with the session cookie, so that the users can be
-   retrieved and their access permissions can be verified. The JWT
-   authentication procedure is different as it makes use of the
-   `Authorization` header using the `Bearer` schema, and in this way allows
-   to omit the use of cookies. The aforementioned ways of
-   authenication are used typically when the user logs in via a browser.
+Because the session-based authentication is primarily used from a browser, it is
+ important to protect the API against Cross-Site Request Forgery (CSRF) attacks.
+ Invenio protects against CSRF-attacks by embedding a short lived CSRF-token
+ into the HTML DOM tree from the server-side. This CSRF-token is then read by a
+ JavaScript application and added to the HTTP request header. Thus, the HTTP
+ request header will include both the session cookie as well as the CRSF-token.
+ The CSRF-token is implemented via a JSON Web Token (JWT).
 
-2. A second way would be to use an access token.
+The session identifier stored inside the session cookie is furthermore protected
+ in a way, so that it must be used from the same machine and same browser.
 
-   An access token can substitute the user credentials and can also be
-   provided to third parties, enabling delegation of rights. In turn,
-   there can be different levels of access granted to the third party,
-   which are defined by the scopes of the token. Finally, there can be
-   differences in the type of token regarding the nature of the
-   requesting client. The different scenarios are explained in more
-   detail further down.
+**Access token**
+An access token (or API key) can also be used to make authenticated requests
+to the API. Access tokens are primarily used by machines accessing the
+Invenio REST API, contrary to session-based authentication which is primarily
+used in browsers by humans. The access tokens can also be used to delegate user
+ rights to a third-party application without exposing user credentials. This
+ delegation of rights can further be scoped to specific parts of the API, to not
+ give full access to third-party applications.
+
+Access tokens can be obtained in different ways. A user may for instance
+manually create an access token via the user interface, or e.g. a third-party
+application can initiate an OAuth 2.0 authentication flow that eventually
+provides them with an access token. The different scenarios for how to obtain an
+ access token are explained in detail further below.
 
 Obtaining a session and JWT token
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,7 +60,7 @@ header, to allow access to the protected resources.
 
 Obtaining an access token
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-In the case where the client request an access token is the resource owner,
+In the case where the client requesting an access token is the resource owner,
 the token will allow all permissions the user would have by providing his
 username and password credentials. For example to use a personal access token
 to send REST API requests, the procedure is the following:
@@ -159,8 +170,8 @@ In that case probably you should use the ``Resource Owner
 Password Credentials Grant``. In this flow the end user trusts
 the ``Client`` with his/her credentials in order to be used by the
 client to authenticate him/her through the authorization server.
-This a grant type that is by default disabled in
-Invenio-OAuth2Server and should be used only if there is no
+This grant type is disabled by default in
+Invenio-OAuth2Server, and should only be used if there is no
 possibily to use another redirect-based flow.
 
 
