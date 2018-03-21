@@ -29,3 +29,4 @@ Features
     - Provides REST API to provide access tokens.
     - Provides decorators that can be used to restrict access to resources.
 * Handles authentication using JSON Web Tokens.
+* Adds support for CSRF protection in REST API.
